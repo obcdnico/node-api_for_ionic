@@ -12,7 +12,8 @@ var UserSchema   = new Schema({
 	timezone: String,
 	updated_time: String,
 	verified: String,
-	server_token: String
+	server_token: String,
+	geolocation: String
 });
 
 module.exports = mongoose.model('User', UserSchema);
