@@ -51,7 +51,7 @@ router.route('/user')
 		var user = new User();		// create a new instance of the User model
 		//one object for assign vars to bdd
 		var objectFB = req.body.objectFB;
-		console.log (req.body.objectFB);
+		//console.log (req.body.objectFB);
 		// info user in conect for app
 		user.id = objectFB.id;  // set the bears name (comes from the request)
 		user.name = objectFB.name;
@@ -64,9 +64,12 @@ router.route('/user')
 		user.updated_time = objectFB.updated_time;
 		user.verified = objectFB.verified;
 		// generate private token
-		user.server_token = require('crypto').randomBytes(48, function(ex, buf) {
-					  			return buf.toString('hex');
-							});
+		var hat = require('hat');
+
+		user.server_token = hat();
+		
+		console.log ("user.server_token");
+		console.log (user.server_token);
 		// CHECK if user ever exist
 		User.findOne({id: user.id}, function(err, result) {
 			if (err){
@@ -106,35 +109,26 @@ router.route('/user/geolocation') // UPDATE USER //
 	// create a user
 	.post(function(req, res) {
 		console.log ('POST /user/geolocation entry : ');
-		var user = new User();		// create a new instance of the User model
+		//var user = new User();		// create a new instance of the User model
 		//one object for assign vars to bdd
-		/*var geolocation = req.body.geolocation;
-		console.log (req.body.geolocation);
+		var geolocation = req.body.geolocation;
+		var server_token = req.body.server_token;
+		//console.log (req.body.geolocation);
 		// info user in conect for app
-		user.geolocation = geolocation;*/
+		//user.geolocation = geolocation;
 		// CHECK if user ever exist
-		User.findOne({id: user.id}, function(err, result) {
+		User.update(
+			{server_token: server_token},// id reference
+   			{geolocation: geolocation} // update field
+			, function(err, result) {
 			if (err){
-				console.log ("error");
+				console.log ("error update geoposition !");
 			}if (result) {
-				//console.log (result);
-        		console.log ("User ever Exist, no update");
+        		console.log ("User ever Exist, update geoposition success");
 				res.json({
-					message: 'LOG - User ever Exist !',
-					server_token: result.server_token
+					message: 'Geo position update success.'
+					//server_token: result.server_token
 				});
-    		} else {
-    			// ajout utilisateur
-    			user.save(function(err) {
-					if (err){
-						res.send(err);
-					}
-					res.json({
-						message: 'LOG - User created!',
-						server_token:user.server_token
-					});
-				});
-        		//console.log ("ELSE ACTION -> user created");
     		}
 		});
 	})
@@ -147,7 +141,36 @@ router.route('/user/geolocation') // UPDATE USER //
 			res.json(users);
 		});
 	});
-	
+router.route('/proximity') // PROXIMITY //
+	// get all the users (accessed at GET http://localhost:8080/api/bears)
+	.post(function(req, res) {
+
+		var geolocation = req.body.geolocation;
+		var server_token = req.body.server_token;
+		// check token && search profiles
+		console.log(server_token);
+		// CHECK if user ever exist
+		User.findOne({server_token: server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
+				//console.log (result);
+        		console.log ("User ever Exist, ok for search proximity");
+				User.find(function(err, users) {
+					if (err)
+						res.send(err);
+					// return all users
+					res.json(users);
+				});
+    		} else {
+    			
+    			res.json({
+					message: 'LOG - User not Exist permission denied !',
+					server_token: server_token
+				});
+    		}
+		});
+	});
 
 // on routes that end in /bears/:bear_id
 // ----------------------------------------------------
