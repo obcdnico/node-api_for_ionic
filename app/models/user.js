@@ -2,7 +2,7 @@ var mongoose     = require('mongoose');
 var Schema       = mongoose.Schema;
 
 var UserSchema   = new Schema({
-	id: String,
+	id_fb: String,
 	name: String,
 	bio: String,
 	email: String,
@@ -13,7 +13,8 @@ var UserSchema   = new Schema({
 	updated_time: String,
 	verified: String,
 	server_token: String,
-	geolocation: String
+	geolocation: String,
+	last_access: { type : Date, default: Date.now }
 });
 
 module.exports = mongoose.model('User', UserSchema);
