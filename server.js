@@ -45,20 +45,22 @@ router.get('/', function(req, res) {
 // on routes that end in /bears
 // ----------------------------------------------------
 router.route('/user')
-	// create a user
+	// create user or update key conect user
 	.post(function(req, res) {
 		var now = new Date();
 		var jsonDate = now.toJSON();
+		var user = new User();		// create a new instance of the User model
 		
 		console.log ('POST user entry : ');
-		var user = new User();		// create a new instance of the User model
 
 		//one object for assign vars to bdd
 		var objectFB = req.body.objectFB;
 		console.log ("objectFB");
 		console.log (objectFB);
 		var server_token = assignSecurityVariable(req.body.server_token);
-
+		var settings = assignSecurityVariable(req.body.settings);
+		console.log (server_token);
+		// asign user variables
 		user.id_fb = objectFB.id;  // set the bears name (comes from the request)
 		user.name = objectFB.name;
 		user.bio = objectFB.bio;
@@ -69,20 +71,19 @@ router.route('/user')
 		user.timezone = objectFB.timezone;
 		user.updated_time = objectFB.updated_time;
 		user.verified = objectFB.verified;
+		user.settings = settings;
+		
 		// generate private && unique token // todo: replace with ssh
 		var hat = require('hat');
 		user.server_token = hat();
-		console.log ('coucou');
+
 		// CHECK if user fb ever exist
 		User.findOne({id_fb: user.id_fb}, function(err, result) {
 			if (err){
-				console.log ("error");
+				console.log ("error fin user from /user");
 			}if (result) {
 				// UTILISATEUR EXISTANT VERIF UPDATE
         		console.log ("User ever Exist, test to update");
-        		//console.log (server_token);
-				/////////
-				if (server_token){
 					// update utilisateur
 					User.update(
 						{server_token: server_token},// id reference
@@ -97,33 +98,26 @@ router.route('/user')
 							timezone: objectFB.timezone,
 							updated_time: objectFB.updated_time,
 							verified: objectFB.verified,
-							updated_time: jsonDate
+							updated_time: jsonDate,
+							settings:settings
 			   			} // update field
-						, function(err, result) {
+						, function(err, result_upd) {
 						if (err){
 							console.log ("error update profil user !");
-						}if (result) {
+							res.json({
+								message: 'LOG - UPDATE ERROR:Exist -> error update profil user !',
+								server_token: result.server_token
+							});
+						}if (result_upd) {
 			        		console.log ("User ever Exist, update profil success");
 							res.json({
-								message: 'Profil update success.',
-								server_token: server_token
+								message: 'LOG - User Exist -> UPDATED !',
+								server_token: result.server_token
 							});
 			    		}
 					});
-	    		} else {
-	    			console.log ("first conection OR: error server token SUPPRIMER LA REPONSE POUR LA SECURITE");
-	    			res.json({
-						message: 'LOG - User Exist- Error token !',
-						server_token: result.server_token
-					});
-	    		}
-	    		////////
-				/*res.json({
-					message: 'LOG - User ever Exist !',
-					server_token: result.server_token
-				});*/
     		} else {
-    			// ajout utilisateur ok
+    			// ajout new utilisateur ok
     			user.save(function(err) {
 					if (err){
 						res.send(err);
@@ -145,7 +139,55 @@ router.route('/user')
 
 			res.json(users);
 		});
-	});
+});
+router.route('/user/settings') // PROXIMITY //
+	// get all the users (accessed at GET http://localhost:8080/api/bears)
+	.post(function(req, res) {
+		// update last date user search..
+
+		var settings = req.body.settings;
+		var server_token = req.body.server_token;
+		if (server_token==='undefined'){
+			console.log ("alert token");
+		}
+		// check token && search profiles
+		console.log(server_token);
+		// CHECK if user ever exist
+		User.findOne({server_token: server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
+				//console.log (result);
+        		console.log ("User ever Exist, ok for update settings");
+				User.update(
+						{server_token: server_token},// id reference
+			   			{
+							settings:settings
+			   			} // update field
+						, function(err, result_upd) {
+						if (err){
+							console.log ("error update settings user !");
+							res.json({
+								message: 'LOG - UPDATE ERROR:Exist -> error update settings user !',
+								server_token: result.server_token
+							});
+						}if (result_upd) {
+			        		console.log ("User ever Exist, update settings success");
+							res.json({
+								message: 'LOG - User Exist -> settings UPDATED !',
+								server_token: result.server_token
+							});
+			    		}
+					});
+    		} else {
+    			
+    			res.json({
+					message: 'LOG - User not Exist permission denied !',
+					server_token: server_token
+				});
+    		}
+		});
+});
 router.route('/user/geolocation') // UPDATE USER //
 	// create a user
 	.post(function(req, res) {
@@ -180,8 +222,8 @@ router.route('/user/geolocation') // UPDATE USER //
 				res.send(err);
 
 			res.json(users);
-		});
 	});
+});
 router.route('/proximity') // PROXIMITY //
 	// get all the users (accessed at GET http://localhost:8080/api/bears)
 	.post(function(req, res) {
@@ -215,7 +257,7 @@ router.route('/proximity') // PROXIMITY //
 				});
     		}
 		});
-	});
+});
 
 // on routes that end in /bears/:bear_id
 // ----------------------------------------------------
@@ -255,8 +297,8 @@ router.route('/user/:user_id')
 
 			res.json({ message: 'Successfully deleted' });
 		});
-	});
-// REGISTER OUR ROUTES -------------------------------
+});
+/* REGISTER OURS ROUTES FROM SERVER JS*/
 app.use('/api', router);
 
 // START THE SERVER

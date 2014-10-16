@@ -14,7 +14,8 @@ var UserSchema   = new Schema({
 	verified: String,
 	server_token: String,
 	geolocation: String,
-	last_access: { type : Date, default: Date.now }
+	last_access: { type : Date, default: Date.now },
+	settings: String
 });
 
 module.exports = mongoose.model('User', UserSchema);
