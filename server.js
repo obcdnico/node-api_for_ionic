@@ -261,13 +261,37 @@ router.route('/proximity') // PROXIMITY //
 
 // on routes that end in /bears/:bear_id
 // ----------------------------------------------------
-router.route('/user/:user_id')
+router.route('/user/:id_fb/:server_token')
 	// get the bear with that id
 	.get(function(req, res) {
-		User.findById(req.params.bear_id, function(err, user) {
-			if (err)
-				res.send(err);
-			res.json(user);
+		// CHECK if user ever exist
+		User.findOne({server_token: req.params.server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
+				//console.log (result);
+        		console.log ("User Exist, ok for get details");
+				User.findOne({id_fb: req.params.id_fb}, function(err, result) {
+					if (err){
+						console.log ("error");
+					}if (result) {
+						//console.log (result);
+		        		console.log ("User Exist - details");
+						res.json({
+							message: 'LOG - User Exist - details !',
+							result: result
+						});
+		    		} else {
+		    			res.json({
+							message: 'LOG - User token not Exist permission denied !',
+						});
+		    		}
+				});
+    		} else {
+    			res.json({
+					message: 'LOG - User token not Exist permission denied !',
+				});
+    		}
 		});
 	})
 	// update the bear with this id
@@ -297,6 +321,89 @@ router.route('/user/:user_id')
 
 			res.json({ message: 'Successfully deleted' });
 		});
+});
+router.route('/messages') // PROXIMITY //
+	// get all the users (accessed at GET http://localhost:8080/api/bears)
+	.post(function(req, res) {
+		var server_token = req.body.server_token;
+		var id_receiver = req.body.id_receiver;
+		var text_message = req.body.message;
+
+		// CHECK if user ever exist
+		User.findOne({server_token: server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
+        		console.log ("User ever Exist, ok for set message");
+				
+				// save message
+				var now = new Date();
+				var jsonDate = now.toJSON();
+				var message = new Message();		// create a new instance of the User model
+
+				// asign message variables
+				message.id_fb_send = result.id_fb;  // set the bears name (comes from the request)
+				message.id_fb_rec = id_receiver;
+				message.mess = text_message;
+				message.datetime = jsonDate;
+
+				message.save(function(err) {
+					if (err){
+						console.log ("error message");
+						res.send(err);
+					}
+					res.json({
+						message: 'LOG - Message created!'
+						//server_token:user.server_token
+					});
+				});
+    		} else {
+    			res.json({
+					message: 'LOG - User not Exist permission denied !',
+					server_token: server_token
+				});
+    		}
+		});
+});
+
+/* MESSAGES server_token get id_fb */
+router.route('/messages/:server_token/:id_fb')
+	// get the bear with that id
+	.get(function(req, res) {
+		// CHECK if user ever exist with token
+		User.findOne({server_token: req.params.server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
+				//console.log (result);
+        		console.log ("User Exist, ok for get messages");
+				Message.findOne({
+					id_fb_rec: req.params.id_fb,
+					id_fb_send: result.id_fb
+				}, function(err, result) {
+					if (err){
+						console.log ("error");
+					}if (result) {
+						//console.log (result);
+		        		console.log ("User Exist - messages");
+						res.json({
+							message: 'LOG - User Exist - messages download !',
+							result: result
+						});
+		    		} else {
+		    			res.json({
+							message: 'LOG - aucun message present !',
+							result: null
+						});
+		    		}
+				});
+    		} else {
+    			res.json({
+					message: 'LOG - User token not Exist permission denied !'
+				});
+    		}
+		});
+	
 });
 /* REGISTER OURS ROUTES FROM SERVER JS*/
 app.use('/api', router);
