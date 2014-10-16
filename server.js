@@ -140,16 +140,14 @@ router.route('/user')
 			res.json(users);
 		});
 });
-router.route('/user/settings') // PROXIMITY //
+router.route('/user/settings') // SETTINGS //
 	// get all the users (accessed at GET http://localhost:8080/api/bears)
 	.post(function(req, res) {
+		console.log (req);
 		// update last date user search..
-
 		var settings = req.body.settings;
 		var server_token = req.body.server_token;
-		if (server_token==='undefined'){
-			console.log ("alert token");
-		}
+
 		// check token && search profiles
 		console.log(server_token);
 		// CHECK if user ever exist
@@ -365,8 +363,84 @@ router.route('/messages') // PROXIMITY //
     		}
 		});
 });
+/* MESSAGES from server_token */
+router.route('/messages/:server_token')
+	.get(function(req, res) {
+		// CHECK if user ever exist with token
+		User.findOne({server_token: req.params.server_token}, function(err, result) {
+			if (err){
+				console.log ("error");
+			}if (result) {
 
-/* MESSAGES server_token get id_fb */
+//////// HEREEEEEEEE ///
+				// agregate
+				/*
+				Message.aggregate(
+					{ $group: 
+						{ id_fb_rec: '$result.id_fb' } 
+					},
+					function (err, res) {
+						if (err) return handleError(err);
+						console.log(res);
+					}
+				);
+				*/
+				// generate aggregate for filter search on mongo
+				var rules = [ {'id_fb_rec': result.id_fb} ];
+				 
+			    // and here are the grouping request:
+			    Message.aggregate([
+			        { $match: {$and: rules } },
+			        { $project: {
+			                id_fb_rec: result.id_fb // and let's turn the nested field into usual field (usual renaming)
+			            }
+			        },
+			        { $group: {
+			                id_fb_rec: result.id_fb, // grouping key
+			            }
+			        }
+			    ], {});
+
+
+
+				//console.log (result);
+        		console.log ("User Exist, ok for get all messages");
+				Message
+				.find({ // get all messages interraction
+					id_fb_rec: { $in: [result.id_fb] },
+					id_fb_send: { $in: [result.id_fb] }
+				}, function(err, result) {
+					if (err){
+						console.log ("error");
+						console.log (err);
+					}if (result) {
+						//console.log (result);
+		        		console.log ("User Exist - all messages");
+						res.json({
+							message: 'LOG - User Exist - all messages download !',
+							result: result
+						});
+		    		} else {
+		    			res.json({
+							message: 'LOG - aucun all message present !',
+							result: null
+						});
+		    		}
+				})
+				.sort({ datetime: 1 }, function(err, result) {
+					if (result)
+						console.log ("sorted");
+					if (err)
+						console.log ('error sorted');
+				});
+    		} else {
+    			res.json({
+					message: 'LOG - User token not Exist permission denied !'
+				});
+    		}
+		});
+});
+/* MESSAGES from server_token send to id_fb */
 router.route('/messages/:server_token/:id_fb')
 	// get the bear with that id
 	.get(function(req, res) {
@@ -377,9 +451,9 @@ router.route('/messages/:server_token/:id_fb')
 			}if (result) {
 				//console.log (result);
         		console.log ("User Exist, ok for get messages");
-				Message.findOne({
-					id_fb_rec: req.params.id_fb,
-					id_fb_send: result.id_fb
+				Message.find({ // si receive or send present in message
+					id_fb_rec: { $in: [req.params.id_fb, result.id_fb] },
+					id_fb_send: { $in: [req.params.id_fb, result.id_fb] }
 				}, function(err, result) {
 					if (err){
 						console.log ("error");
@@ -396,6 +470,8 @@ router.route('/messages/:server_token/:id_fb')
 							result: null
 						});
 		    		}
+				}).sort({ datetime: 1 }, function(err, result) {
+					console.log ("sorted");
 				});
     		} else {
     			res.json({
@@ -403,7 +479,6 @@ router.route('/messages/:server_token/:id_fb')
 				});
     		}
 		});
-	
 });
 /* REGISTER OURS ROUTES FROM SERVER JS*/
 app.use('/api', router);
