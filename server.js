@@ -143,7 +143,7 @@ router.route('/user')
 router.route('/user/settings') // SETTINGS //
 	// get all the users (accessed at GET http://localhost:8080/api/bears)
 	.post(function(req, res) {
-		console.log (req);
+		//console.log (req);
 		// update last date user search..
 		var settings = req.body.settings;
 		var server_token = req.body.server_token;
@@ -344,17 +344,24 @@ router.route('/messages') // PROXIMITY //
 				message.id_fb_rec = id_receiver;
 				message.mess = text_message;
 				message.datetime = jsonDate;
-
-				message.save(function(err) {
-					if (err){
-						console.log ("error message");
-						res.send(err);
-					}
-					res.json({
-						message: 'LOG - Message created!'
-						//server_token:user.server_token
+				// check message
+				if (assignSecurityVariable(text_message)){
+					message.save(function(err) {
+						if (err){
+							console.log ("error message");
+							res.send(err);
+						}
+						res.json({
+							message: 'LOG - Message created!'
+							//server_token:user.server_token
+						});
 					});
-				});
+				} else {
+					res.json({
+							message: 'LOG - Message not create: message empty !'
+							//server_token:user.server_token
+						});
+				}
     		} else {
     			res.json({
 					message: 'LOG - User not Exist permission denied !',
@@ -386,7 +393,7 @@ router.route('/messages/:server_token')
 				);
 				*/
 				// generate aggregate for filter search on mongo
-				var rules = [ {'id_fb_rec': result.id_fb} ];
+				/*var rules = [ {'id_fb_rec': result.id_fb} ];
 				 
 			    // and here are the grouping request:
 			    Message.aggregate([
@@ -399,7 +406,7 @@ router.route('/messages/:server_token')
 			                id_fb_rec: result.id_fb, // grouping key
 			            }
 			        }
-			    ], {});
+			    ], {});*/
 
 
 
