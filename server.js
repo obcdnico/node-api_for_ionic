@@ -380,43 +380,72 @@ router.route('/messages/:server_token')
 			}if (result) {
 
 //////// HEREEEEEEEE ///
-				// agregate
-				/*
-				Message.aggregate(
-					{ $group: 
-						{ id_fb_rec: '$result.id_fb' } 
-					},
-					function (err, res) {
-						if (err) return handleError(err);
-						console.log(res);
-					}
-				);
-				*/
-				// generate aggregate for filter search on mongo
-				/*var rules = [ {'id_fb_rec': result.id_fb} ];
-				 
-			    // and here are the grouping request:
-			    Message.aggregate([
-			        { $match: {$and: rules } },
-			        { $project: {
-			                id_fb_rec: result.id_fb // and let's turn the nested field into usual field (usual renaming)
-			            }
-			        },
-			        { $group: {
-			                id_fb_rec: result.id_fb, // grouping key
-			            }
-			        }
-			    ], {});*/
+				
 
-
+/*
+  var agg = [
+    {$group: {
+      _id: "$id_fb_rec"
+    }}
+  ];
+ 
+  Message.aggregate(agg, function(err, logs){
+    if (err) { return def.reject(err); }
+ 
+    console.log('logs');
+    console.log(logs);
+  });
+*/
+				Message.aggregate([
+				    { $match : {"id_fb_rec" : result.id_fb} },
+				    //{ $unwind: '$index' },
+				    //{ $unwind : "$datetime" },
+				    //{$unwind : "$display"},
+				    { $sort: {'datetime': -1}},
+				    { $group : {
+				    	_id : "$id_fb_rec",
+				    	datetime: { $first: '$datetime' },
+				    	id_fb_rec: { $first: '$id_fb_rec' }
+				      }
+				    },//,datetime: $push:'$datetime', mess: $push:'$mess' } },
+				    //{ $group : {_id : "$id_fb_rec" } },
+				    //{ $sort : {datetime : 1 } },
+				    { $limit : 10 }
+				    ], function(err, result) {
+				    	console.log ('error');
+				    	console.log (err);
+					    console.log("Aggregation: ");
+				    	console.log (result);
+				    	///
+						if (err){
+							console.log ("error");
+							console.log (err);
+						}if (result) {
+							//console.log (result);
+			        		console.log ("User Exist - all messages");
+							res.json({
+								message: 'LOG - User Exist - all messages download !',
+								result: result
+							});
+			    		} else {
+			    			res.json({
+								message: 'LOG - aucun all message present !',
+								result: null
+							});
+			    		}
+				});
+//////// HEREEEEEEEE ///
 
 				//console.log (result);
         		console.log ("User Exist, ok for get all messages");
-				Message
+				/*Message
 				.find({ // get all messages interraction
 					id_fb_rec: { $in: [result.id_fb] },
 					id_fb_send: { $in: [result.id_fb] }
-				}, function(err, result) {
+				},
+				{ _id:0, "id_fb_rec":1,"datetime":1 },
+				{ $group: ['id_fb_rec']}
+				, function(err, result) {
 					if (err){
 						console.log ("error");
 						console.log (err);
@@ -439,7 +468,7 @@ router.route('/messages/:server_token')
 						console.log ("sorted");
 					if (err)
 						console.log ('error sorted');
-				});
+				});*/
     		} else {
     			res.json({
 					message: 'LOG - User token not Exist permission denied !'
