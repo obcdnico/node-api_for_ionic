@@ -7,6 +7,7 @@ var UserSchema   = new Schema({
 	bio: String,
 	email: String,
 	first_name: String,
+	last_name: String,
 	link: String,
 	locale: String,
 	timezone: String,
@@ -15,6 +16,9 @@ var UserSchema   = new Schema({
 	server_token: String,
 	geolocation: String,
 	last_access: { type : Date, default: Date.now },
+	datetime_last_login: { type : Date, default: Date.now },
+	datetime_create: { type : Date, default: Date.now },
+	datetime_last_modify: { type : Date, default: Date.now },
 	settings: String
 });
 

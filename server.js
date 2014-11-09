@@ -55,11 +55,13 @@ router.route('/user')
 
 		//one object for assign vars to bdd
 		var objectFB = req.body.objectFB;
+		
 		console.log ("objectFB");
 		console.log (objectFB);
+
 		var server_token = assignSecurityVariable(req.body.server_token);
 		var settings = assignSecurityVariable(req.body.settings);
-		console.log (server_token);
+
 		// asign user variables
 		user.id_fb = objectFB.id;  // set the bears name (comes from the request)
 		user.name = objectFB.name;
@@ -157,6 +159,7 @@ router.route('/user/settings') // SETTINGS //
 			}if (result) {
 				//console.log (result);
         		console.log ("User ever Exist, ok for update settings");
+        		console.log(settings);
 				User.update(
 						{server_token: server_token},// id reference
 			   			{
@@ -185,7 +188,21 @@ router.route('/user/settings') // SETTINGS //
 				});
     		}
 		});
-});
+	})
+	// get all the users (accessed at GET http://localhost:8080/api/bears)
+	.get(function(req, res) {
+
+		// CHECK if user ever exist
+		User.findOne({server_token: req.body.server_token}, function(err, result) {
+			if (err){
+				console.log ("error get setting for one user");
+			}if (result) {
+				console.log (result);
+				return result;
+			}
+		});
+	});
+
 router.route('/user/geolocation') // UPDATE USER //
 	// create a user
 	.post(function(req, res) {
@@ -241,6 +258,26 @@ router.route('/proximity') // PROXIMITY //
 			}if (result) {
 				//console.log (result);
         		console.log ("User ever Exist, ok for search proximity");
+
+				User.aggregate([
+				    //{ $match : {"id_fb_rec" : result.id_fb} },
+				    //{ $unwind: '$index' },
+				    //{ $unwind : "$datetime" },
+				    //{$unwind : "$display"},
+				    { $sort: {'datetime': -1}}, // calcul distance
+				    //{ $group : {_id : "$id_fb_rec" } },
+				    { $limit : 10 }
+				    ], function(err, result) {
+				    	console.log ('error');
+				    	console.log (err);
+					    console.log("Aggregation: ");
+				    	console.log (result);
+				    	/// ici la reponse
+				});
+
+
+
+
 				User.find(function(err, users) {
 					if (err)
 						res.send(err);
@@ -320,10 +357,11 @@ router.route('/user/:id_fb/:server_token')
 			res.json({ message: 'Successfully deleted' });
 		});
 });
-router.route('/messages') // PROXIMITY //
-	// get all the users (accessed at GET http://localhost:8080/api/bears)
+	// route for set messages
+router.route('/messages')
 	.post(function(req, res) {
 		var server_token = req.body.server_token;
+		console.log (server_token);
 		var id_receiver = req.body.id_receiver;
 		var text_message = req.body.message;
 
@@ -370,32 +408,18 @@ router.route('/messages') // PROXIMITY //
     		}
 		});
 });
-/* MESSAGES from server_token */
+/* GET ALL MESSAGES aggregate from server_token */
 router.route('/messages/:server_token')
 	.get(function(req, res) {
 		// CHECK if user ever exist with token
+		//check entry values
+		console.log ("server_token");
+		console.log (server_token);
 		User.findOne({server_token: req.params.server_token}, function(err, result) {
 			if (err){
 				console.log ("error");
 			}if (result) {
-
-//////// HEREEEEEEEE ///
-				
-
-/*
-  var agg = [
-    {$group: {
-      _id: "$id_fb_rec"
-    }}
-  ];
- 
-  Message.aggregate(agg, function(err, logs){
-    if (err) { return def.reject(err); }
- 
-    console.log('logs');
-    console.log(logs);
-  });
-*/
+				//get aggregate message for page messages
 				Message.aggregate([
 				    { $match : {"id_fb_rec" : result.id_fb} },
 				    //{ $unwind: '$index' },
@@ -434,7 +458,6 @@ router.route('/messages/:server_token')
 							});
 			    		}
 				});
-//////// HEREEEEEEEE ///
 
 				//console.log (result);
         		console.log ("User Exist, ok for get all messages");
