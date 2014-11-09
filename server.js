@@ -188,18 +188,41 @@ router.route('/user/settings') // SETTINGS //
 				});
     		}
 		});
-	})
+	});
+// NOT FUNCTIONALLY //
+router.route('/user/getsettings') // SETTINGS //
 	// get all the users (accessed at GET http://localhost:8080/api/bears)
-	.get(function(req, res) {
+	.post(function(req, res) {
+		//console.log (req);
+		// update last date user search..
+		var server_token = req.body.server_token;
 
+		// check token && search profiles
+		console.log(server_token);
 		// CHECK if user ever exist
-		User.findOne({server_token: req.body.server_token}, function(err, result) {
+		User.findOne({server_token: server_token}, function(err, result) {
 			if (err){
-				console.log ("error get setting for one user");
+				console.log ("error");
 			}if (result) {
-				console.log (result);
-				return result;
-			}
+        		console.log ("User ever Exist, ok for get only user/settings");
+        		console.log (result);
+
+        		var settings = JSON.stringify(result.settings); 
+        		console.log (settings);
+
+        		//////////////////////////////////////////////////////////////
+				res.json({
+					message: 'LOG - get settings for user !',
+					server_token: server_token,
+					settings: settings
+				});
+    		} else {
+    			
+    			res.json({
+					message: 'LOG - User not Exist permission denied !',
+					server_token: server_token
+				});
+    		}
 		});
 	});
 
@@ -558,4 +581,7 @@ function assignSecurityVariable(entry){
 	} else {
 		return entry;
 	}
+}
+function ObjectToString(object){
+	return JSON.stringify(object);
 }
