@@ -66,6 +66,8 @@ router.route('/user')
 		user.id_fb = objectFB.id;  // set the bears name (comes from the request)
 		user.name = objectFB.name;
 		user.bio = objectFB.bio;
+		user.description = objectFB.description;
+		user.birthday = objectFB.birthday;
 		user.email = objectFB.email;
 		user.first_name = objectFB.first_name;
 		user.link = objectFB.link;
@@ -89,10 +91,13 @@ router.route('/user')
 					// update utilisateur
 					User.update(
 						{server_token: server_token},// id reference
+			   			assignArrayForMongoIfVarExists(
 			   			{
 							id_fb: objectFB.id,
 							name: objectFB.name,
 							bio: objectFB.bio,
+							description: objectFB.description,
+							birthday: objectFB.birthday,
 							email: objectFB.email,
 							first_name: objectFB.first_name,
 							link: objectFB.link,
@@ -102,7 +107,7 @@ router.route('/user')
 							verified: objectFB.verified,
 							updated_time: jsonDate,
 							settings:settings
-			   			} // update field
+			   			}) // update field
 						, function(err, result_upd) {
 						if (err){
 							console.log ("error update profil user !");
@@ -113,19 +118,28 @@ router.route('/user')
 						}if (result_upd) {
 			        		console.log ("User ever Exist, update profil success");
 							res.json({
-								message: 'LOG - User Exist -> UPDATED !',
+								message: 'LOG - User Exist -> UPDATED SUCCESS !',
 								server_token: result.server_token
 							});
 			    		}
+			    		// reinit user
+			    		res.json({
+								message: 'LOG - User Exist -> no update reinit !',
+								server_token: result.server_token
+							});
 					});
     		} else {
     			// ajout new utilisateur ok
     			user.save(function(err) {
 					if (err){
+						res.json({
+						message: 'LOG - User create error !',
+						server_token:user.server_token
+					});
 						res.send(err);
 					}
 					res.json({
-						message: 'LOG - User created!',
+						message: 'LOG - User created !',
 						server_token:user.server_token
 					});
 				});
@@ -135,6 +149,7 @@ router.route('/user')
 	})
 	// get all the users (accessed at GET http://localhost:8080/api/bears)
 	.get(function(req, res) {
+		console.log ('GET ALL USERS');
 		User.find(function(err, users) {
 			if (err)
 				res.send(err);
@@ -296,17 +311,19 @@ router.route('/proximity') // PROXIMITY //
 					    console.log("Aggregation: ");
 				    	console.log (result);
 				    	/// ici la reponse
+				    	res.json(result);
+
 				});
 
 
 
 
-				User.find(function(err, users) {
+				/*User.find(function(err, users) {
 					if (err)
 						res.send(err);
 					// return all users
 					res.json(users);
-				});
+				});*/
     		} else {
     			
     			res.json({
@@ -434,6 +451,11 @@ router.route('/messages')
 /* GET ALL MESSAGES aggregate from server_token */
 router.route('/messages/:server_token')
 	.get(function(req, res) {
+		//console.log('body');
+		//console.log(req.body);
+		console.log ('params');
+		console.log (req.params);
+		var server_token = req.params.server_token;
 		// CHECK if user ever exist with token
 		//check entry values
 		console.log ("server_token");
@@ -584,4 +606,17 @@ function assignSecurityVariable(entry){
 }
 function ObjectToString(object){
 	return JSON.stringify(object);
+}
+var assignArrayForMongoIfVarExists = function(objectVars){
+	console.log ('objectVars');
+	console.log (objectVars);
+	var object = {};
+	for (var prop in objectVars) {
+		if (objectVars[prop] != null && objectVars[prop] !='undefined' && objectVars[prop] != false)
+			object[prop] = objectVars[prop];
+	};
+	console.log ('object');
+	console.log (object);
+
+	return object;
 }
