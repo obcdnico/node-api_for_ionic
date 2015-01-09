@@ -20,7 +20,12 @@ app.all('*', function(req, res, next) {
 var port     = process.env.PORT || 8080; // set our port
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://localhost/partiesfines'); // connect to our database
+
+// official nodjitsu
+mongoose.connect('mongodb://nodejitsu:4dd468c32b063d33dcc418970bddc1b0@troup.mongohq.com:10031/nodejitsudb5082957162'); // connect to our database
+
+// local mongoose
+//mongoose.connect('mongodb://localhost/partiesfine'); // connect to our database
 var User     = require('./app/models/user');
 var Message     = require('./app/models/message');
 // ROUTES FOR OUR API
