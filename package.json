@@ -1,18 +1,29 @@
 {
-	"name": "node-api",
-	"main": "server.js",
-	"dependencies": {
-		"express": "~4.0.0",
-		"morgan": "~1.0.0",
-		"mongoose": "~3.6.13",
-		"body-parser": "~1.0.1"
-	},
-	"subdomain": "obysky-node-api",
-	"scripts": {
-		"start": "node server.js"
-	},
-	"version": "0.0.0",
-	"engines": {
-		"node": "0.10.x"
-	}
+  "name": "node-api",
+  "main": "server.js",
+  "dependencies": {
+    "express": "~4.0.0",
+    "morgan": "~1.0.0",
+    "mongoose": "~3.6.13",
+    "body-parser": "~1.0.1",
+    "hat": "~0.0.3"
+  },
+  "subdomain": "obysky-node-api",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "0.0.0-3",
+  "engines": {
+    "node": "0.10.x"
+  },
+  "description": "Using the new Express 4.0 Router to build an API",
+  "devDependencies": {},
+  "keywords": [
+    "api",
+    "node",
+    "mongoose",
+    "partiesfine"
+  ],
+  "author": "oby",
+  "license": "Creative Commons"
 }
