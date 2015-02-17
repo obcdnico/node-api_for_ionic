@@ -1,10 +1,23 @@
 // BASE SETUP
 // =============================================================================
 
+/*** GLOBAL VAR FOR SERVER NODE **/
+//mongoose.connect('mongodb://localhost/partiesfine'); // connect to our database
+// mongodb://nodejitsu:4dd468c32b063d33dcc418970bddc1b0@troup.mongohq.com:10031/nodejitsudb5082957162
+
+// mongodb://<dbuser>:<dbpassword>@ds045521.mongolab.com:45521/myddbpat
+//var mongoConnectionString = "mongodb://<partroot>:<rtpartrt>@proximus.modulusmongo.net:27017/vaZov4im";
+//var mongoConnectionString = "mongodb://localhost/partiesfine";
+//var mongoConnectionString = "mongodb://<obcdnico>:<1910obcd>@ds045521.mongolab.com:45521/myddbpat";
+var mongoConnectionString = "mongodb://nodejitsu:4dd468c32b063d33dcc418970bddc1b0@troup.mongohq.com:10031/nodejitsudb5082957162";
 // call the packages we need
 var express    = require('express');
 var bodyParser = require('body-parser');
 var app        = express();
+
+var http = require('http');
+var https = require('https');
+
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,10 +35,9 @@ var port     = process.env.PORT || 8080; // set our port
 var mongoose   = require('mongoose');
 
 // official nodjitsu
-mongoose.connect('mongodb://nodejitsu:4dd468c32b063d33dcc418970bddc1b0@troup.mongohq.com:10031/nodejitsudb5082957162'); // connect to our database
+mongoose.connect(mongoConnectionString); // connect to our database
 
 // local mongoose
-//mongoose.connect('mongodb://localhost/partiesfine'); // connect to our database
 var User     = require('./app/models/user');
 var Message     = require('./app/models/message');
 // ROUTES FOR OUR API
@@ -49,6 +61,54 @@ router.get('/', function(req, res) {
 
 // on routes that end in /bears
 // ----------------------------------------------------
+
+router.route('/redirectFacebookConnect') // FB CONNECT //
+	// redirect url for facebook connect
+	.post(function(req, res) {
+		var url_facebook = req.body.objectFB;
+		console.log ('redirectFacebookConnect');
+		console.log (url_facebook);
+		// connect get with http
+		/*var options = {
+		  //host: url_facebook,
+		  port: 80,
+		  path: url_facebook,
+		  method: 'GET'
+		  headers: {'user-agent': 'Mozilla/5.0'},
+		};*/
+
+		var req = https.get(
+		{
+		  host: 'www.facebook.com',
+		  path: '/dialog/oauth'+url_facebook,
+		  headers: {
+		    'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13'
+		  }
+		}, function(res_https) {
+		  console.log('STATUS: ' + res_https.statusCode);
+		  console.log('HEADERS: ' + JSON.stringify(res_https.headers));
+		  res_https.setEncoding('utf8');
+		  
+
+		  res_https.on('data', function (chunk) {
+		    console.log('BODY: ' + chunk.toString());
+			
+			// send server response
+			res.json({
+				message: 'LOG - redirect OK -> FBConect SUCCESS !',
+				response : chunk.toString()
+				//server_token: result.server_token
+			});
+
+		  });
+		});
+
+		req.on('error', function(e) {
+		  console.log('problem with request: ' + e.message);
+		});
+	}
+);
+
 router.route('/user')
 	// create user or update key conect user
 	.post(function(req, res) {
