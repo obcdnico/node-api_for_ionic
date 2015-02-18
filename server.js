@@ -10,6 +10,8 @@
 //var mongoConnectionString = "mongodb://localhost/partiesfine";
 //var mongoConnectionString = "mongodb://<obcdnico>:<1910obcd>@ds045521.mongolab.com:45521/myddbpat";
 var mongoConnectionString = "mongodb://nodejitsu:4dd468c32b063d33dcc418970bddc1b0@troup.mongohq.com:10031/nodejitsudb5082957162";
+//var mongoConnectionString = "https://obscure-harbor-6214.herokuapp.com/api";
+
 // call the packages we need
 var express    = require('express');
 var bodyParser = require('body-parser');
